@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام تجاوز كشف الذكاء الاصطناعي | AI Detection Bypass</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- خلفية متحركة -->
+    <div class="bg-animation">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <div class="container">
+        <!-- الهيدر -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="18" stroke="url(#g1)" stroke-width="2.5"/><path d="M14 20l4 4 8-8" stroke="url(#g1)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><defs><linearGradient id="g1" x1="0" y1="0" x2="40" y2="40"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs></svg>
+                </div>
+                <div>
+                    <h1>نظام التجاوز الذكي</h1>
+                    <p class="subtitle">AI Detection Bypass Engine</p>
+                </div>
+            </div>
+            <div class="header-badge">
+                <span class="badge-dot"></span>
+                <span>6 تقنيات تجاوز نشطة</span>
+            </div>
+        </header>
+
+        <!-- لوحة التحكم -->
+        <div class="controls-panel glass-card">
+            <div class="control-group">
+                <label>شدة التعديل</label>
+                <div class="intensity-slider">
+                    <input type="range" id="intensity" min="10" max="100" value="50">
+                    <div class="intensity-labels">
+                        <span>خفيف</span><span>متوسط</span><span>قوي</span>
+                    </div>
+                    <div class="intensity-value" id="intensityValue">50%</div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>التقنيات</label>
+                <div class="technique-chips">
+                    <button class="chip active" data-tech="fingerprints">🔍 إزالة البصمات</button>
+                    <button class="chip active" data-tech="perplexity">🎲 رفع الحيرة</button>
+                    <button class="chip active" data-tech="burstiness">📊 رفع الانفجارية</button>
+                    <button class="chip active" data-tech="watermark">💧 إزالة العلامات المائية</button>
+                    <button class="chip active" data-tech="stylometry">✍️ أنسنة الأسلوب</button>
+                    <button class="chip active" data-tech="imperfections">🎭 عيوب طبيعية</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- منطقة العمل الرئيسية -->
+        <div class="workspace">
+            <!-- الإدخال -->
+            <div class="panel glass-card">
+                <div class="panel-header">
+                    <h2>📝 النص الأصلي</h2>
+                    <span class="word-count" id="inputWordCount">0 كلمة</span>
+                </div>
+                <textarea id="inputText" placeholder="الصق النص المُولَّد بالذكاء الاصطناعي هنا..."></textarea>
+                <div class="panel-actions">
+                    <button class="btn btn-secondary" id="analyzeBtn">
+                        <span class="btn-icon">📊</span> تحليل فقط
+                    </button>
+                    <button class="btn btn-primary" id="bypassBtn">
+                        <span class="btn-icon">⚡</span> تجاوز الكشف
+                    </button>
+                </div>
+            </div>
+
+            <!-- الإخراج -->
+            <div class="panel glass-card">
+                <div class="panel-header">
+                    <h2>✅ النص المعدَّل</h2>
+                    <span class="word-count" id="outputWordCount">0 كلمة</span>
+                </div>
+                <textarea id="outputText" placeholder="النص المعدَّل سيظهر هنا..." readonly></textarea>
+                <div class="panel-actions">
+                    <button class="btn btn-secondary" id="copyBtn" disabled>
+                        <span class="btn-icon">📋</span> نسخ
+                    </button>
+                    <button class="btn btn-secondary" id="reprocessBtn" disabled>
+                        <span class="btn-icon">🔄</span> إعادة معالجة
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- لوحة التحليل -->
+        <div class="analysis-panel glass-card" id="analysisPanel" style="display:none;">
+            <h2>📈 تقرير التحليل</h2>
+            <div class="scores-grid">
+                <!-- النتيجة الرئيسية -->
+                <div class="score-card main-score">
+                    <div class="score-ring-container">
+                        <svg class="score-ring" viewBox="0 0 120 120">
+                            <circle class="ring-bg" cx="60" cy="60" r="52"/>
+                            <circle class="ring-fill before-ring" cx="60" cy="60" r="52" id="beforeRing"/>
+                        </svg>
+                        <div class="score-value" id="beforeScore">—</div>
+                    </div>
+                    <div class="score-label">قبل التعديل</div>
+                    <div class="score-verdict" id="beforeVerdict">—</div>
+                </div>
+                <div class="score-card main-score">
+                    <div class="score-ring-container">
+                        <svg class="score-ring" viewBox="0 0 120 120">
+                            <circle class="ring-bg" cx="60" cy="60" r="52"/>
+                            <circle class="ring-fill after-ring" cx="60" cy="60" r="52" id="afterRing"/>
+                        </svg>
+                        <div class="score-value" id="afterScore">—</div>
+                    </div>
+                    <div class="score-label">بعد التعديل</div>
+                    <div class="score-verdict" id="afterVerdict">—</div>
+                </div>
+                <div class="score-card improvement-card">
+                    <div class="improvement-value" id="improvementValue">—</div>
+                    <div class="score-label">التحسن</div>
+                </div>
+            </div>
+
+            <!-- المؤشرات التفصيلية -->
+            <div class="metrics-grid" id="metricsGrid">
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-icon">🎲</span>
+                        <span>الحيرة (Perplexity)</span>
+                    </div>
+                    <div class="metric-bars">
+                        <div class="metric-row"><span>قبل</span><div class="bar-track"><div class="bar-fill before-bar" id="perpBefore"></div></div><span class="bar-val" id="perpBeforeVal">—</span></div>
+                        <div class="metric-row"><span>بعد</span><div class="bar-track"><div class="bar-fill after-bar" id="perpAfter"></div></div><span class="bar-val" id="perpAfterVal">—</span></div>
+                    </div>
+                    <p class="metric-hint">الهدف: 80-100 (بشري عادي)</p>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-icon">📊</span>
+                        <span>الانفجارية (Burstiness)</span>
+                    </div>
+                    <div class="metric-bars">
+                        <div class="metric-row"><span>قبل</span><div class="bar-track"><div class="bar-fill before-bar" id="burstBefore"></div></div><span class="bar-val" id="burstBeforeVal">—</span></div>
+                        <div class="metric-row"><span>بعد</span><div class="bar-track"><div class="bar-fill after-bar" id="burstAfter"></div></div><span class="bar-val" id="burstAfterVal">—</span></div>
+                    </div>
+                    <p class="metric-hint">الهدف: 0.6-1.2 (بشري عادي)</p>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-icon">✍️</span>
+                        <span>الأسلوب (Stylometry)</span>
+                    </div>
+                    <div class="metric-bars">
+                        <div class="metric-row"><span>قبل</span><div class="bar-track"><div class="bar-fill before-bar" id="styleBefore"></div></div><span class="bar-val" id="styleBeforeVal">—</span></div>
+                        <div class="metric-row"><span>بعد</span><div class="bar-track"><div class="bar-fill after-bar" id="styleAfter"></div></div><span class="bar-val" id="styleAfterVal">—</span></div>
+                    </div>
+                    <p class="metric-hint">الهدف: أكثر من 60 (يبدو بشرياً)</p>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-icon">🔍</span>
+                        <span>بصمات AI المكتشفة</span>
+                    </div>
+                    <div class="metric-bars">
+                        <div class="metric-row"><span>قبل</span><div class="bar-track"><div class="bar-fill before-bar fingerprint-bar" id="fpBefore"></div></div><span class="bar-val" id="fpBeforeVal">—</span></div>
+                        <div class="metric-row"><span>بعد</span><div class="bar-track"><div class="bar-fill after-bar fingerprint-bar" id="fpAfter"></div></div><span class="bar-val" id="fpAfterVal">—</span></div>
+                    </div>
+                    <p class="metric-hint">الهدف: 0 بصمات</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- حالة التحميل -->
+        <div class="loading-overlay" id="loading" style="display:none;">
+            <div class="loading-spinner">
+                <div class="spinner-ring"></div>
+                <p>جارٍ المعالجة...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
