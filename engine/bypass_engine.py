@@ -435,7 +435,48 @@ class BypassEngine:
         return ' '.join(result)
 
     # ═══════════════════════════════════════════════════════════
-    # 9. حقن الإنتروبيا — Entropy Injection (NEW)
+    # 9. موجة الإيقاع — Rhythm Wave (NEW v6)
+    # ═══════════════════════════════════════════════════════════
+    def rhythm_wave(self, text, intensity=0.5):
+        """
+        إنشاء تذبذب طبيعي في أطوال الجمل — أقوى تقنية لرفع Burstiness.
+        يكشف الجمل المتتالية المتشابهة الطول ويحقن فواصل قصيرة بينها.
+        """
+        lang = detect_language(text)
+        res = get_resources(lang)
+        sentences = self.split_sentences(text)
+        if len(sentences) < 5:
+            return text
+
+        result = []
+        injections = 0
+        max_injections = max(2, int(len(sentences) * intensity * 0.25))
+
+        for i, sent in enumerate(sentences):
+            result.append(sent)
+            if injections >= max_injections or i >= len(sentences) - 1:
+                continue
+
+            curr_len = len(sent.split())
+            next_len = len(sentences[i+1].split()) if i + 1 < len(sentences) else 0
+
+            # إذا كانت الجملة الحالية والتالية متقاربتي الطول ومتوسطتي الطول
+            if abs(curr_len - next_len) <= 5 and curr_len > 8 and random.random() < intensity * 0.45:
+                # اختيار نوع الحقن عشوائياً
+                inject_type = random.choice(["short", "question", "aside"])
+
+                if inject_type == "short":
+                    result.append(random.choice(res["short_sentences"]))
+                elif inject_type == "question":
+                    result.append(random.choice(res["rhetorical"]))
+                elif inject_type == "aside":
+                    result.append(random.choice(res["transitions"]))
+                injections += 1
+
+        return ' '.join(result)
+
+    # ═══════════════════════════════════════════════════════════
+    # 10. حقن الإنتروبيا — Entropy Injection
     # ═══════════════════════════════════════════════════════════
     def inject_entropy(self, text, intensity=0.5):
         """إدخال ظروف في بداية الجمل لرفع الحيرة — محدود وطبيعي"""

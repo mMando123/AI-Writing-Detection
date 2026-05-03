@@ -356,10 +356,13 @@ def _apply_balanced_bypass(text, intensity, techniques, current_score):
     if "burstiness" in techniques:
         result = engine.enhance_burstiness(result, intensity * 0.8)
 
-    # المرحلة 8: كسر تجانس أطوال الجمل (جديد — بعد الانفجارية)
+    # المرحلة 8: كسر تجانس أطوال الجمل
     result = engine.break_uniformity(result, intensity * 0.7)
 
-    # المرحلة 9: حقن الإنتروبيا
+    # المرحلة 9: موجة الإيقاع — حقن جمل قصيرة وأسئلة بين الجمل المتجانسة
+    result = engine.rhythm_wave(result, intensity * 0.6)
+
+    # المرحلة 10: حقن الإنتروبيا
     result = engine.inject_entropy(result, intensity * 0.6)
 
     # المرحلة 10: عيوب طبيعية
