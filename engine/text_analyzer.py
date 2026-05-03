@@ -148,6 +148,86 @@ class TextAnalyzer:
         repetition = (max_starter_repeat * 0.4 + bigram_repeat_ratio * 0.3 + dominant_pattern * 0.3)
         return round(min(repetition, 1.0), 3)
 
+    def _sentence_uniformity(self, text):
+        """
+        قياس تجانس أطوال الجمل — أهم مؤشر لكشف AI.
+        AI ينتج جملاً متقاربة الطول (12-18 كلمة). البشر يتذبذبون.
+        القيمة: 0 (متنوع جداً = بشري) إلى 1 (متجانس = AI)
+        """
+        sentences = self.split_sentences(text)
+        if len(sentences) < 4:
+            return 0.5
+
+        lengths = [len(s.split()) for s in sentences]
+        mean_len = sum(lengths) / len(lengths)
+        if mean_len == 0:
+            return 0.5
+
+        # 1. نسبة الجمل في النطاق "المريح" لـ AI (10-20 كلمة)
+        in_comfort_zone = sum(1 for l in lengths if 10 <= l <= 20)
+        comfort_ratio = in_comfort_zone / len(lengths)
+
+        # 2. هل هناك جمل قصيرة جداً (< 6) أو طويلة جداً (> 25)؟
+        has_extremes = sum(1 for l in lengths if l < 6 or l > 25)
+        extreme_ratio = has_extremes / len(lengths)
+
+        # 3. الانحراف المعياري النسبي (CV) — منخفض = AI
+        variance = sum((l - mean_len) ** 2 for l in lengths) / len(lengths)
+        std_dev = math.sqrt(variance)
+        cv = std_dev / mean_len if mean_len > 0 else 0
+
+        # 4. أقصى فرق بين جملتين متتاليتين
+        max_consecutive_diff = 0
+        for i in range(1, len(lengths)):
+            diff = abs(lengths[i] - lengths[i-1])
+            max_consecutive_diff = max(max_consecutive_diff, diff)
+        normalized_max_diff = min(max_consecutive_diff / 15, 1)
+
+        # التجانس: عالٍ إذا كانت الجمل في comfort zone مع CV منخفض
+        uniformity = (
+            comfort_ratio * 0.35 +
+            (1 - min(extreme_ratio * 3, 1)) * 0.25 +
+            (1 - min(cv / 0.8, 1)) * 0.25 +
+            (1 - normalized_max_diff) * 0.15
+        )
+        return round(min(max(uniformity, 0), 1.0), 3)
+
+    def _transition_overuse(self, text):
+        """
+        قياس الإفراط في استخدام الروابط الانتقالية الرسمية.
+        AI يستخدم "Furthermore", "Moreover", "Additionally" بكثرة.
+        البشر يستخدمونها أقل ويربطون الجمل بشكل طبيعي أو بدون روابط.
+        القيمة: 0 (استخدام طبيعي) إلى 1 (إفراط = AI)
+        """
+        lang = self.detect_language(text)
+        sentences = self.split_sentences(text)
+        if len(sentences) < 3:
+            return 0.0
+
+        if lang == "ar":
+            formal_transitions = [
+                "بالإضافة", "علاوة", "فضلاً", "من ناحية أخرى",
+                "بالتالي", "لذلك", "وبالتالي", "ومع ذلك",
+                "في هذا السياق", "من هذا المنطلق", "في ضوء",
+                "تجدر الإشارة", "من الجدير بالذكر",
+            ]
+        else:
+            formal_transitions = [
+                "furthermore", "moreover", "additionally", "consequently",
+                "therefore", "nevertheless", "nonetheless", "in addition",
+                "in conclusion", "as a result", "on the other hand",
+                "it is important", "it is worth noting", "it should be noted",
+                "significantly", "subsequently", "accordingly",
+            ]
+
+        text_lower = text.lower()
+        transition_count = sum(1 for t in formal_transitions if t in text_lower)
+        # نسبة الروابط لكل جملة
+        ratio = transition_count / len(sentences)
+        # أكثر من رابط لكل 3 جمل = إفراط
+        overuse = min(ratio / 0.35, 1.0)
+        return round(overuse, 3)
+
     def estimate_perplexity(self, text):
         """
         تقدير الحيرة بناءً على N-gram entropy + مؤشرات إحصائية متعددة.
@@ -448,20 +528,26 @@ class TextAnalyzer:
         ai_fingerprints = self.detect_ai_fingerprints(text)
         statistics = self.statistical_analysis(text)
         repetition = self._repetition_score(text)
+        uniformity = self._sentence_uniformity(text)
+        transition_score = self._transition_overuse(text)
 
-        # ═══ نظام التسجيل المُركَّب (Ensemble Scoring) ═══
+        # ═══ نظام التسجيل المُركَّب (Ensemble Scoring) — v2 ═══
         perplexity_score = min(perplexity / 100, 1) * 100
         burstiness_score = min(burstiness / 0.8, 1) * 100
         fingerprint_penalty = min(len(ai_fingerprints) * 12, 50)
-        repetition_penalty = repetition * 100  # أعلى = أكثر تكراراً = أسوأ
+        repetition_penalty = repetition * 100
+        uniformity_penalty = uniformity * 100  # تجانس عالٍ = AI
+        transition_penalty = transition_score * 100  # إفراط في الروابط = AI
 
-        # المعادلة المُركَّبة مع عقوبات
+        # المعادلة المُركَّبة مع المؤشرات الجديدة
         raw_score = (
-            perplexity_score * 0.25 +
-            burstiness_score * 0.20 +
-            stylometry["score"] * 0.25 +
-            max(0, 100 - fingerprint_penalty) * 0.15 +
-            max(0, 100 - repetition_penalty) * 0.15
+            perplexity_score * 0.20 +
+            burstiness_score * 0.18 +
+            stylometry["score"] * 0.22 +
+            max(0, 100 - fingerprint_penalty) * 0.10 +
+            max(0, 100 - repetition_penalty) * 0.10 +
+            max(0, 100 - uniformity_penalty) * 0.10 +
+            max(0, 100 - transition_penalty) * 0.10
         )
 
         # معايرة: النصوص ذات البصمات الكثيرة تُعاقب بشدة
@@ -495,6 +581,8 @@ class TextAnalyzer:
             "burstiness": burstiness,
             "stylometry": stylometry,
             "repetition_score": round(repetition, 3),
+            "sentence_uniformity": round(uniformity, 3),
+            "transition_overuse": round(transition_score, 3),
             "ai_fingerprints": len(ai_fingerprints),
             "ai_fingerprint_details": ai_fingerprints,
             "statistics": statistics,

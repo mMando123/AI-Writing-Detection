@@ -320,13 +320,11 @@ def bypass_file():
 
 def _apply_balanced_bypass(text, intensity, techniques, current_score):
     """
-    خط أنابيب تجاوز محسّن v5 — تعديلات أقوى بكثير.
+    خط أنابيب تجاوز محسّن v6 — مع مؤشرات جديدة.
     
-    التحسينات:
-    - شدة أعلى لكل تقنية (80-100% بدلاً من 50-70%)
-    - إضافة إعادة هيكلة الجمل للخط
-    - عدم التوقف المبكر
-    - تمرير ثانٍ للتعديل الإضافي
+    التحسينات v6:
+    - إضافة إزالة الروابط الانتقالية الزائدة (مبكراً)
+    - إضافة كسر تجانس أطوال الجمل (بعد الانفجارية)
     """
     result = text
     
@@ -336,35 +334,40 @@ def _apply_balanced_bypass(text, intensity, techniques, current_score):
     if "fingerprints" in techniques:
         result = engine.remove_ai_fingerprints(result)
 
-    # المرحلة 2: إعادة هيكلة الجمل (تغيير البنية — مهم جداً!)
+    # المرحلة 2: إزالة الروابط الانتقالية الزائدة (جديد — مبكراً قبل أي تعديل)
+    result = engine.remove_transition_overuse(result, intensity * 0.8)
+
+    # المرحلة 3: إعادة هيكلة الجمل
     result = engine.restructure_sentences(result, intensity * 0.9)
 
-    # المرحلة 3: إزالة العلامات المائية — شدة عالية
+    # المرحلة 4: إزالة العلامات المائية
     if "watermark" in techniques:
         result = engine.remove_watermarks(result, intensity * 0.85)
 
-    # المرحلة 4: رفع الحيرة — شدة عالية
+    # المرحلة 5: رفع الحيرة
     if "perplexity" in techniques:
         result = engine.boost_perplexity(result, intensity * 0.9)
 
-    # المرحلة 5: أنسنة الأسلوب — شدة عالية
+    # المرحلة 6: أنسنة الأسلوب
     if "stylometry" in techniques:
         result = engine.humanize_style(result, intensity * 0.9)
 
-    # المرحلة 6: رفع الانفجارية — شدة عالية
+    # المرحلة 7: رفع الانفجارية
     if "burstiness" in techniques:
         result = engine.enhance_burstiness(result, intensity * 0.8)
 
-    # المرحلة 7: حقن الإنتروبيا
+    # المرحلة 8: كسر تجانس أطوال الجمل (جديد — بعد الانفجارية)
+    result = engine.break_uniformity(result, intensity * 0.7)
+
+    # المرحلة 9: حقن الإنتروبيا
     result = engine.inject_entropy(result, intensity * 0.6)
 
-    # المرحلة 8: عيوب طبيعية
+    # المرحلة 10: عيوب طبيعية
     if "imperfections" in techniques and intensity > 0.2:
         result = engine.add_imperfections(result, intensity * 0.3)
 
     # ═══ التمرير الثاني: تعديلات إضافية إذا كانت الشدة عالية ═══
     if intensity >= 0.4:
-        # تمرير ثانٍ خفيف لاستبدال المزيد من الكلمات
         if "perplexity" in techniques:
             result = engine.boost_perplexity(result, intensity * 0.5)
         if "watermark" in techniques:

@@ -471,6 +471,143 @@ class BypassEngine:
         return ' '.join(result)
 
     # ═══════════════════════════════════════════════════════════
+    # 10. إزالة الروابط الانتقالية الزائدة — Transition Cleanup
+    # ═══════════════════════════════════════════════════════════
+    def remove_transition_overuse(self, text, intensity=0.5):
+        """إزالة أو استبدال الروابط الانتقالية الرسمية الزائدة بأسلوب طبيعي"""
+        lang = detect_language(text)
+        sentences = self.split_sentences(text)
+        if len(sentences) < 3:
+            return text
+
+        if lang == "en":
+            # روابط رسمية → بدائل طبيعية أو حذف
+            transition_map = {
+                "furthermore, ": ["", "also, ", "and "],
+                "moreover, ": ["", "plus, ", "and "],
+                "additionally, ": ["", "also, ", "on top of that, "],
+                "consequently, ": ["so, ", "as a result, ", ""],
+                "nevertheless, ": ["still, ", "but ", "yet "],
+                "nonetheless, ": ["still, ", "even so, ", ""],
+                "subsequently, ": ["then, ", "after that, ", ""],
+                "accordingly, ": ["so, ", "", "that's why "],
+                "in addition, ": ["also, ", "", "plus, "],
+                "it is important to note that ": ["", "notably, ", "one thing — "],
+                "it is worth noting that ": ["", "notably, ", ""],
+                "it should be noted that ": ["", "", "worth mentioning, "],
+            }
+        else:
+            transition_map = {
+                "بالإضافة إلى ذلك، ": ["", "كما أن ", "وأيضاً "],
+                "علاوة على ذلك، ": ["", "وكذلك ", ""],
+                "فضلاً عن ذلك، ": ["", "وأيضاً ", ""],
+                "وبالتالي، ": ["لذا ", "", "فـ"],
+                "ومع ذلك، ": ["لكن ", "إلا أن ", ""],
+                "من ناحية أخرى، ": ["", "أما ", ""],
+                "تجدر الإشارة إلى أن ": ["", "واللافت أن ", ""],
+                "من الجدير بالذكر أن ": ["", "ومما يُلاحظ ", ""],
+            }
+
+        result = text
+        removals = 0
+        max_removals = max(2, int(len(sentences) * intensity * 0.4))
+
+        for formal, alternatives in transition_map.items():
+            if removals >= max_removals:
+                break
+            if lang == "en":
+                pattern = re.compile(re.escape(formal), re.IGNORECASE)
+            else:
+                pattern = re.compile(re.escape(formal))
+
+            if pattern.search(result) and random.random() < intensity * 0.7:
+                replacement = random.choice(alternatives)
+                result = pattern.sub(replacement, result, count=1)
+                removals += 1
+
+        return result
+
+    # ═══════════════════════════════════════════════════════════
+    # 11. كسر تجانس أطوال الجمل — Break Uniformity
+    # ═══════════════════════════════════════════════════════════
+    def break_uniformity(self, text, intensity=0.5):
+        """كسر تجانس أطوال الجمل — إذا كانت 3+ جمل متتالية بنفس الطول"""
+        lang = detect_language(text)
+        sentences = self.split_sentences(text)
+        if len(sentences) < 5:
+            return text
+
+        lengths = [len(s.split()) for s in sentences]
+        result = list(sentences)
+        changes = 0
+        max_changes = max(1, int(len(sentences) * intensity * 0.3))
+
+        i = 0
+        while i < len(result) - 2 and changes < max_changes:
+            l1 = len(result[i].split())
+            l2 = len(result[i+1].split())
+            l3 = len(result[i+2].split())
+
+            # إذا كانت 3 جمل متتالية متقاربة الطول (± 4 كلمات)
+            if abs(l1 - l2) <= 4 and abs(l2 - l3) <= 4 and l2 > 8:
+                action = random.choice(["split", "shorten", "extend"])
+
+                if action == "split" and l2 > 12:
+                    # تقسيم الجملة الوسطى
+                    words = result[i+1].split()
+                    mid = len(words) // 2
+                    # البحث عن نقطة قطع طبيعية قريبة من المنتصف
+                    cut = mid
+                    if lang == "en":
+                        connectors = {"and", "but", "or", "while", "when", "since", "although"}
+                    else:
+                        connectors = {"و", "لكن", "أو", "حيث", "إذ", "بينما"}
+                    for j in range(max(3, mid - 3), min(len(words) - 3, mid + 4)):
+                        if words[j].lower().strip(',') in connectors:
+                            cut = j
+                            break
+                    part1 = ' '.join(words[:cut]).rstrip(',') + '.'
+                    part2_words = words[cut:]
+                    # إزالة الرابط من بداية الجزء الثاني
+                    if part2_words and part2_words[0].lower().strip(',') in connectors:
+                        part2_words = part2_words[1:]
+                    if part2_words:
+                        part2_words[0] = part2_words[0].capitalize() if lang == "en" else part2_words[0]
+                    part2 = ' '.join(part2_words)
+                    if part2:
+                        result[i+1] = part1
+                        result.insert(i+2, part2)
+                        changes += 1
+
+                elif action == "shorten" and l2 > 10:
+                    # تقصير الجملة بحذف عبارة وصفية
+                    words = result[i+1].split()
+                    # حذف آخر 3-5 كلمات إذا لم تنتهي بنقطة
+                    cut_amount = random.randint(2, min(4, len(words) // 3))
+                    result[i+1] = ' '.join(words[:-cut_amount]).rstrip(',') + '.'
+                    changes += 1
+
+                elif action == "extend" and i + 1 < len(result):
+                    # إضافة عبارة قصيرة بعد الجملة
+                    if lang == "en":
+                        extras = [
+                            "This matters.", "That's key.", "It's worth thinking about.",
+                            "The impact is real.", "And it shows.",
+                        ]
+                    else:
+                        extras = [
+                            "وهذا مهم.", "وهو أمر لافت.", "والأثر واضح.",
+                            "وهذا جوهري.", "ولا يمكن تجاهله.",
+                        ]
+                    result.insert(i+2, random.choice(extras))
+                    changes += 1
+                i += 3
+            else:
+                i += 1
+
+        return ' '.join(result)
+
+    # ═══════════════════════════════════════════════════════════
     # المعالجة الشاملة — Full Bypass Pipeline
     # ═══════════════════════════════════════════════════════════
     def full_bypass(self, text, intensity=0.5):
