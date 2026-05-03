@@ -149,13 +149,12 @@ class BypassEngine:
                 i += 2
                 continue
 
-            # تقسيم الجمل الطويلة (> 15 كلمة) عند أقرب رابط
-            if wc > 15 and r < intensity * 0.6:
+            # تقسيم الجمل الطويلة (> 20 كلمة) عند أقرب رابط
+            if wc > 20 and r < intensity * 0.45:
                 if lang == "ar":
-                    cut_markers = ["و", "لكن", "ثم", "أو", "إذ", "حيث", "كما", "بينما", "مما", "حتى"]
+                    cut_markers = ["لكن", "ثم", "إذ", "حيث", "بينما"]
                 else:
-                    # إزالة "as" و "which" لأنها تظهر في عبارات مثل "such as"
-                    cut_markers = ["and", "but", "then", "or", "while", "since", "although", "where", "when"]
+                    cut_markers = ["but", "while", "since", "although", "however"]
                 
                 best_cut = -1
                 for j in range(wc // 3, min(2 * wc // 3 + 1, len(words))):
@@ -163,9 +162,9 @@ class BypassEngine:
                         best_cut = j
                         break
                 
-                # التأكد أن كلا الجزأين طويلان كفاية (4 كلمات على الأقل)
-                if best_cut > 3 and (wc - best_cut) > 3:
-                    part1 = ' '.join(words[:best_cut])
+                # التأكد أن كلا الجزأين طويلان كفاية (5 كلمات على الأقل)
+                if best_cut > 5 and (wc - best_cut) > 5:
+                    part1 = ' '.join(words[:best_cut]).rstrip(',')
                     part2 = ' '.join(words[best_cut:])
                     # إزالة الرابط من بداية الجزء الثاني وتكبير الحرف
                     if lang == "en" and part2:
@@ -212,9 +211,9 @@ class BypassEngine:
 
         result = []
         total = len(sentences)
-        # زيادة عدد الإدراجات — 35% من الجمل
-        insertions = max(2, int(total * intensity * 0.35))
-        insertions = min(insertions, max(2, total // 3))
+        # إدراجات محدودة — 15% من الجمل فقط لتجنب الاكتشاف
+        insertions = max(1, int(total * intensity * 0.15))
+        insertions = min(insertions, max(1, total // 5))
 
         # مواقع عشوائية للإدراج
         available = list(range(1, max(2, total)))
@@ -230,28 +229,56 @@ class BypassEngine:
                     if lang == "ar":
                         sent = hedge + "، " + sent
                     else:
-                        if sent and sent[0].isalpha():
+                        # فقط إضافة hedge إذا بدأت الجملة بأنماط AI شائعة
+                        first_word = sent.split()[0].lower() if sent.split() else ""
+                        ai_starts = {"the", "this", "these", "it", "in", "on", "a", "an"}
+                        if first_word in ai_starts:
                             sent = hedge + ", " + sent[0].lower() + sent[1:]
                         else:
-                            sent = hedge + ", " + sent
+                            # إضافتها كجملة مستقلة قبلها
+                            result.append(hedge + ".")
                 elif itype == "personal":
-                    personal = random.choice(res["personal"])
-                    if lang == "ar":
-                        sent = personal + "، " + sent
+                    # العبارات الشخصية كجمل مكتملة المعنى — لا أجزاء ناقصة
+                    if lang == "en":
+                        standalone_personal = [
+                            "I've seen this firsthand.",
+                            "This resonates with my own experience.",
+                            "I can relate to this personally.",
+                            "This is something I feel strongly about.",
+                            "I've thought about this quite a bit.",
+                        ]
                     else:
-                        if sent and sent[0].isalpha():
-                            sent = personal + ", " + sent[0].lower() + sent[1:]
-                        else:
-                            sent = personal + ", " + sent
+                        standalone_personal = [
+                            "شهدتُ ذلك بنفسي.",
+                            "هذا يتوافق مع تجربتي الشخصية.",
+                            "أشعر بقوة تجاه هذا الأمر.",
+                            "فكّرت في هذا كثيراً.",
+                        ]
+                    result.append(random.choice(standalone_personal))
                 elif itype == "emotional":
-                    emotional = random.choice(res["emotional"])
-                    sent = emotional + "، " + sent if lang == "ar" else emotional + ", " + sent
+                    if lang == "en":
+                        standalone_emotional = [
+                            "That's quite striking when you think about it.",
+                            "This is often overlooked.",
+                            "The reality is more nuanced than it seems.",
+                            "This deserves more attention.",
+                        ]
+                    else:
+                        standalone_emotional = [
+                            "وهذا لافت للنظر حقاً.",
+                            "كثيراً ما يُغفل هذا الجانب.",
+                            "الواقع أكثر تعقيداً مما يبدو.",
+                        ]
+                    result.append(random.choice(standalone_emotional))
                 elif itype == "parenthetical":
                     paren = random.choice(res["parenthetical"])
                     sent = sent.rstrip('.!?؟') + " " + paren + "."
                 elif itype == "informal":
                     inf = random.choice(res["informal"])
-                    sent = inf + "، " + sent if lang == "ar" else inf + ", " + sent
+                    if lang == "ar":
+                        sent = inf + "، " + sent
+                    else:
+                        sent = inf + ", " + sent[0].lower() + sent[1:] if sent and sent[0].isalpha() else inf + ", " + sent
                 elif itype == "transition":
                     result.append(random.choice(res["transitions"]))
             result.append(sent)
@@ -373,12 +400,12 @@ class BypassEngine:
             words = sent.split()
             
             # تخطي الجمل القصيرة (عناوين، أسئلة) — لا نعدلها
-            if len(words) < 12:
+            if len(words) < 15:
                 rebuilt.append(sent)
                 continue
             
-            # تخطي الجمل التي تحتوي على نقطتين (أسئلة وعناوين)
-            if ':' in sent or '؟' in sent:
+            # تخطي الجمل التي تحتوي على نقطتين أو علامات استفهام
+            if ':' in sent or '؟' in sent or '?' in sent:
                 rebuilt.append(sent)
                 continue
 
@@ -387,21 +414,23 @@ class BypassEngine:
             else:
                 parts = sent.split(',')
             
-            # تبديل أجزاء الجملة — فقط إذا كان كل جزء طويلاً كفاية
+            # تبديل أجزاء الجملة — فقط إذا كان كل جزء طويلاً كفاية (6+ كلمات)
             if (len(parts) >= 2 
-                    and random.random() < intensity * 0.5
-                    and len(parts[0].split()) > 4 
-                    and len(parts[1].split()) > 4):
+                    and random.random() < intensity * 0.35
+                    and len(parts[0].split()) > 6 
+                    and len(parts[1].split()) > 6):
                 parts[0], parts[1] = parts[1].strip(), parts[0].strip()
                 sep = '، ' if lang == "ar" else ', '
                 rebuilt.append(sep.join(parts))
-            # تحويل "X because Y" إلى "Since Y, X" — فقط مع because
-            elif lang == "en" and random.random() < intensity * 0.3:
+            # تحويل "X because Y" إلى "Since Y, X"
+            elif lang == "en" and random.random() < intensity * 0.25:
                 if 'because ' in sent.lower():
                     idx = sent.lower().find('because ')
                     part_before = sent[:idx].rstrip(', ')
-                    part_after = sent[idx + 8:]  # len('because ') = 8
-                    if part_before and part_after and len(part_before.split()) > 3:
+                    part_after = sent[idx + 8:]
+                    if (part_before and part_after 
+                            and len(part_before.split()) > 5 
+                            and len(part_after.split()) > 3):
                         sent = "Since " + part_after.rstrip('.') + ", " + part_before[0].lower() + part_before[1:] + "."
                 rebuilt.append(sent)
             else:

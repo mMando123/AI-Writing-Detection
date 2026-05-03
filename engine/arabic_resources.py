@@ -72,7 +72,7 @@ ENGLISH_SYNONYMS = {
     "make": ["create", "produce", "generate", "craft", "construct"],
     "get": ["obtain", "acquire", "receive", "gain", "secure"],
     "give": ["provide", "offer", "supply", "grant", "deliver"],
-    "think": ["believe", "consider", "reckon", "suppose", "maintain"],
+    "think": ["consider", "reckon", "reflect on", "reason"],
     "need": ["require", "demand", "necessitate", "call for"],
     "find": ["discover", "uncover", "identify", "detect", "locate"],
     "start": ["begin", "commence", "initiate", "launch", "kick off"],
@@ -88,8 +88,8 @@ ENGLISH_SYNONYMS = {
     "maintain": ["preserve", "sustain", "uphold", "keep", "retain"],
 
     # Common adjectives
-    "important": ["crucial", "vital", "essential", "significant", "pivotal"],
-    "different": ["diverse", "distinct", "varied", "unique", "disparate"],
+    "important": ["significant", "essential", "key", "pivotal"],
+    "different": ["diverse", "distinct", "varied", "unique"],
     "large": ["substantial", "considerable", "extensive", "massive", "vast"],
     "small": ["minor", "modest", "slight", "limited", "marginal"],
     "good": ["excellent", "outstanding", "favorable", "solid", "strong"],
