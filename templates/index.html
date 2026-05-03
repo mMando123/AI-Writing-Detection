@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام تجاوز كشف الذكاء الاصطناعي | AI Detection Bypass</title>
+    <meta name="description" content="نظام متقدم لتحليل وتجاوز كشف المحتوى المكتوب بالذكاء الاصطناعي - يدعم رفع الملفات DOCX و PDF و TXT">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
 </head>
@@ -24,7 +25,7 @@
                 </div>
                 <div>
                     <h1>نظام التجاوز الذكي</h1>
-                    <p class="subtitle">AI Detection Bypass Engine</p>
+                    <p class="subtitle">AI Detection Bypass Engine v2</p>
                 </div>
             </div>
             <div class="header-badge">
@@ -32,6 +33,20 @@
                 <span>6 تقنيات تجاوز نشطة</span>
             </div>
         </header>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!--  تبويبات الوضع: نص يدوي / رفع ملف     -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="mode-tabs glass-card">
+            <button class="mode-tab active" id="tabText" data-mode="text">
+                <span class="tab-icon">📝</span>
+                <span>نص يدوي</span>
+            </button>
+            <button class="mode-tab" id="tabFile" data-mode="file">
+                <span class="tab-icon">📁</span>
+                <span>رفع ملف</span>
+            </button>
+        </div>
 
         <!-- لوحة التحكم -->
         <div class="controls-panel glass-card">
@@ -58,48 +73,142 @@
             </div>
         </div>
 
-        <!-- منطقة العمل الرئيسية -->
-        <div class="workspace">
-            <!-- الإدخال -->
-            <div class="panel glass-card">
-                <div class="panel-header">
-                    <h2>📝 النص الأصلي</h2>
-                    <span class="word-count" id="inputWordCount">0 كلمة</span>
+        <!-- ═══════════════════════════════════════ -->
+        <!--  وضع النص اليدوي (الأصلي)              -->
+        <!-- ═══════════════════════════════════════ -->
+        <div id="textMode">
+            <div class="workspace">
+                <!-- الإدخال -->
+                <div class="panel glass-card">
+                    <div class="panel-header">
+                        <h2>📝 النص الأصلي</h2>
+                        <span class="word-count" id="inputWordCount">0 كلمة</span>
+                    </div>
+                    <textarea id="inputText" placeholder="الصق النص المُولَّد بالذكاء الاصطناعي هنا..."></textarea>
+                    <div class="panel-actions">
+                        <button class="btn btn-secondary" id="analyzeBtn">
+                            <span class="btn-icon">📊</span> تحليل فقط
+                        </button>
+                        <button class="btn btn-primary" id="bypassBtn">
+                            <span class="btn-icon">⚡</span> تجاوز الكشف
+                        </button>
+                    </div>
                 </div>
-                <textarea id="inputText" placeholder="الصق النص المُولَّد بالذكاء الاصطناعي هنا..."></textarea>
-                <div class="panel-actions">
-                    <button class="btn btn-secondary" id="analyzeBtn">
-                        <span class="btn-icon">📊</span> تحليل فقط
-                    </button>
-                    <button class="btn btn-primary" id="bypassBtn">
-                        <span class="btn-icon">⚡</span> تجاوز الكشف
-                    </button>
-                </div>
-            </div>
 
-            <!-- الإخراج -->
-            <div class="panel glass-card">
-                <div class="panel-header">
-                    <h2>✅ النص المعدَّل</h2>
-                    <span class="word-count" id="outputWordCount">0 كلمة</span>
-                </div>
-                <textarea id="outputText" placeholder="النص المعدَّل سيظهر هنا..." readonly></textarea>
-                <div class="panel-actions">
-                    <button class="btn btn-secondary" id="copyBtn" disabled>
-                        <span class="btn-icon">📋</span> نسخ
-                    </button>
-                    <button class="btn btn-secondary" id="reprocessBtn" disabled>
-                        <span class="btn-icon">🔄</span> إعادة معالجة
-                    </button>
+                <!-- الإخراج -->
+                <div class="panel glass-card">
+                    <div class="panel-header">
+                        <h2>✅ النص المعدَّل</h2>
+                        <span class="word-count" id="outputWordCount">0 كلمة</span>
+                    </div>
+                    <textarea id="outputText" placeholder="النص المعدَّل سيظهر هنا..." readonly></textarea>
+                    <div class="panel-actions">
+                        <button class="btn btn-secondary" id="copyBtn" disabled>
+                            <span class="btn-icon">📋</span> نسخ
+                        </button>
+                        <button class="btn btn-secondary" id="reprocessBtn" disabled>
+                            <span class="btn-icon">🔄</span> إعادة معالجة
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- لوحة التحليل -->
+        <!-- ═══════════════════════════════════════ -->
+        <!--  وضع رفع الملفات (الجديد)              -->
+        <!-- ═══════════════════════════════════════ -->
+        <div id="fileMode" style="display: none;">
+            <!-- منطقة الرفع -->
+            <div class="upload-zone glass-card" id="uploadZone">
+                <div class="upload-content">
+                    <div class="upload-icon">
+                        <svg viewBox="0 0 64 64" fill="none">
+                            <rect x="8" y="16" width="48" height="40" rx="4" stroke="currentColor" stroke-width="2" stroke-dasharray="4 4"/>
+                            <path d="M32 36V24M26 30l6-6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="24" cy="12" r="4" fill="currentColor" opacity="0.3"/>
+                            <circle cx="40" cy="12" r="4" fill="currentColor" opacity="0.3"/>
+                        </svg>
+                    </div>
+                    <h3>اسحب الملف هنا أو اضغط للاختيار</h3>
+                    <p>يدعم: DOCX, PDF, TXT — الحد الأقصى: 20 ميجابايت</p>
+                    <p class="upload-hint">📸 الملفات التي تحتوي صور سيتم الحفاظ على مواقعها</p>
+                </div>
+                <input type="file" id="fileInput" accept=".docx,.pdf,.txt" hidden>
+            </div>
+
+            <!-- معلومات الملف المرفوع -->
+            <div class="file-info glass-card" id="fileInfo" style="display: none;">
+                <div class="file-info-header">
+                    <div class="file-icon-name">
+                        <span class="file-type-icon" id="fileTypeIcon">📄</span>
+                        <div>
+                            <h3 id="fileName">—</h3>
+                            <p id="fileStats">—</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" id="removeFileBtn">✕ إزالة</button>
+                </div>
+
+                <!-- النتيجة الإجمالية -->
+                <div class="file-overall-score" id="fileOverallScore" style="display: none;">
+                    <div class="overall-ring-container">
+                        <svg class="score-ring" viewBox="0 0 120 120">
+                            <circle class="ring-bg" cx="60" cy="60" r="52"/>
+                            <circle class="ring-fill file-ring" cx="60" cy="60" r="52" id="fileScoreRing"/>
+                        </svg>
+                        <div class="score-value" id="fileScoreValue">—</div>
+                    </div>
+                    <div class="overall-info">
+                        <div class="overall-label">نسبة البشرية الإجمالية</div>
+                        <div class="overall-verdict" id="fileVerdict">—</div>
+                        <div class="overall-ai-percent" id="fileAiPercent">—</div>
+                    </div>
+                </div>
+
+                <!-- شريط التقدم -->
+                <div class="progress-section" id="progressSection" style="display: none;">
+                    <div class="progress-bar-track">
+                        <div class="progress-bar-fill" id="progressFill"></div>
+                    </div>
+                    <p class="progress-text" id="progressText">جارٍ المعالجة...</p>
+                </div>
+
+                <!-- أزرار التحكم -->
+                <div class="file-actions" id="fileActions" style="display: none;">
+                    <button class="btn btn-primary" id="bypassAllBtn">
+                        <span class="btn-icon">⚡</span> تجاوز الكل
+                    </button>
+                    <button class="btn btn-secondary" id="bypassAiOnlyBtn">
+                        <span class="btn-icon">🎯</span> تجاوز فقرات AI فقط
+                    </button>
+                    <button class="btn btn-secondary" id="downloadBtn" style="display: none;">
+                        <span class="btn-icon">📥</span> تحميل الملف
+                    </button>
+                </div>
+            </div>
+
+            <!-- عرض الفقرات -->
+            <div class="paragraphs-panel glass-card" id="paragraphsPanel" style="display: none;">
+                <div class="paragraphs-header">
+                    <h2>📑 تحليل الفقرات</h2>
+                    <div class="paragraphs-legend">
+                        <span class="legend-item"><span class="legend-dot legend-human"></span> بشري</span>
+                        <span class="legend-item"><span class="legend-dot legend-mixed"></span> مختلط</span>
+                        <span class="legend-item"><span class="legend-dot legend-ai"></span> ذكاء اصطناعي</span>
+                    </div>
+                </div>
+                <div class="paragraphs-list" id="paragraphsList">
+                    <!-- الفقرات ستُولَّد ديناميكياً -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!--  لوحة التحليل (مشتركة)                 -->
+        <!-- ═══════════════════════════════════════ -->
         <div class="analysis-panel glass-card" id="analysisPanel" style="display:none;">
             <h2>📈 تقرير التحليل</h2>
             <div class="scores-grid">
-                <!-- النتيجة الرئيسية -->
                 <div class="score-card main-score">
                     <div class="score-ring-container">
                         <svg class="score-ring" viewBox="0 0 120 120">
@@ -128,7 +237,6 @@
                 </div>
             </div>
 
-            <!-- المؤشرات التفصيلية -->
             <div class="metrics-grid" id="metricsGrid">
                 <div class="metric-card">
                     <div class="metric-header">
@@ -181,11 +289,11 @@
         <div class="loading-overlay" id="loading" style="display:none;">
             <div class="loading-spinner">
                 <div class="spinner-ring"></div>
-                <p>جارٍ المعالجة...</p>
+                <p id="loadingText">جارٍ المعالجة...</p>
             </div>
         </div>
     </div>
 
-    <script src="/static/app.js"></script>
+    <script src="/static/app.js?v=3"></script>
 </body>
 </html>
